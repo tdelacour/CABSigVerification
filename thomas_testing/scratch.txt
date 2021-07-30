@@ -1,0 +1,32 @@
+using System;
+using System.Security.Cryptography;
+					
+public class Program
+{
+	public static void Main()
+	{
+		var requestStr = "{\"clientId\":\"privalgo-test\",\"requestId\":\"8\",\"timestamp\":\"2021-07-30T04:05:51.491Z\",\"callbackArgs\":\"TestArgs\",\"transactions\":[{\"transactionId\":\"t8\",\"transactionType\":\"pay\",\"statusCode\":112,\"statusDescription\":\"The transaction is being reviewed.\",\"provider\":\"test\",\"statusType\":\"pending\",\"finished\":false}],\"finished\":false}";
+		var requestByteArray = System.Text.Encoding.UTF8.GetBytes(requestStr);
+		
+		var keyBase64 = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEJxzXoZ/LFxPXvfJ2MBMjhptT691J178zwID1EbO0MeB/fbhL8y3hqRWlIg0wTNq8NjWXlAjzjQ/qUxHq82xTMQ==";
+		var keyByteArray = Convert.FromBase64String(keyBase64);
+		
+		var signatureBase64Encoded = "MEYCIQD7y3DQMfRR4n/RSb+3F7vdpm0IyZ1a0ojJ+eyByu2zRQIhAI6fhLGyzemSYBBOuOAx1V0QFRJaEeGbPKYSSnlxN97b";
+		byte[] sigDecoded = Convert.FromBase64String(signatureBase64Encoded);
+		
+		Console.WriteLine(ToReadableByteArray(sigDecoded));
+		Console.WriteLine(ToReadableByteArray(requestByteArray));
+		
+		var dsa = ECDsa.Create();
+        dsa.ImportSubjectPublicKeyInfo(keyByteArray, out _);
+
+        bool verificationResult = dsa.VerifyData(requestByteArray, sigDecoded, HashAlgorithmName.SHA256);
+		
+		Console.WriteLine(verificationResult);
+	}
+	
+	static public string ToReadableByteArray(byte[] bytes)
+	{
+    	return string.Join(", ", bytes);
+	}
+}
